@@ -17,7 +17,7 @@ module.exports.getUserById = (req, res) => {
           .status(404)
           .send({ message: 'Пользователь не найден' });
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         return res
           .status(400)
           .send({ message: 'Переданы некорректные данные' });
@@ -31,7 +31,7 @@ module.exports.createUser = (req, res) => {
   User.create({ name, about, avatar })
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
       return res.status(500).send({ message: 'Ошибка сервера' });
@@ -50,7 +50,7 @@ module.exports.updateUser = (req, res) => {
       if (err.message === 'NotFound') {
         return res.status(404).send({ message: 'Пользователь не найден' });
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
       return res.status(500).send({ message: 'Ошибка сервера' });
@@ -69,7 +69,7 @@ module.exports.updateAvatar = (req, res) => {
       if (err.message === 'NotFound') {
         return res.status(404).send({ message: 'Пользователь не найден' });
       }
-      if (err.name === 'CastError') {
+      if (err.name === 'ValidationError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }
       return res.status(500).send({ message: 'Ошибка сервера' });

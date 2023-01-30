@@ -29,12 +29,8 @@ module.exports.getUserById = (req, res) => {
 module.exports.createUser = (req, res) => {
   const { name, about, avatar } = req.body;
   User.create({ name, about, avatar })
-    .orFail(new Error('NotFound'))
     .then((user) => res.status(200).send({ data: user }))
     .catch((err) => {
-      if (err.message === 'NotFound') {
-        return res.status(404).send({ message: 'Пользователь не найден' });
-      }
       if (err.name === 'CastError') {
         return res.status(400).send({ message: 'Переданы некорректные данные' });
       }

@@ -1,7 +1,12 @@
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
   NOT_FOUND, BAD_REQUEST, SERVER_ERROR, CREATED,
 } = require('../constats');
+const ConflictError = require('../errors/ConflictError');
+const BadRequestError = require('../errors/BadRequestError');
+const NotFoundError = require('../errors/NotFoundError');
 
 module.exports.getUsers = (req, res) => {
   User.find({})
@@ -25,16 +30,64 @@ module.exports.getUserById = (req, res) => {
     });
 };
 
-module.exports.createUser = (req, res) => {
-  const { name, about, avatar } = req.body;
-  User.create({ name, about, avatar })
+module.exports.createUser = (req, res, next) => {
+  const { name, about, avatar, email, password,
+} = req.body;
+  if (!email || !password) {
+    next(new BadRequestError('Неправильный логин или пароль.'));
+  }
+
+  return User.findOne({ email }).then((user) => {
+    if (user) {
+      next(new ConflictError(`Пользователь с ${email} уже существует.`));
+    }
+
+    return bcrypt.hash(password, 10);
+  })
+    .then((hash) => User.create({
+      name,
+      about,
+      avatar,
+      email,
+      password: hash,
+    }),
+    )
     .then((user) => res.status(CREATED).send({ data: user }))
     .catch((err) => {
       if (err.name === 'ValidationError') {
-        return res.status(BAD_REQUEST).send({ message: 'Переданы некорректные данные' });
+        return res
+          .status(BAD_REQUEST)
+          .send({ message: 'Переданы некорректные данные' });
       }
       return res.status(SERVER_ERROR).send({ message: 'Ошибка сервера' });
     });
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then((user) => {
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key', { expiresIn: '7d' });
+
+      return res.send({ token });
+    })
+    .catch((err) => {
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
+};
+
+module.exports.getCurrentUser = (req, res, next) => {
+  const { _id } = req.user;
+  User.findById(_id).then((user) => {
+    if (!user) {
+      return next(new NotFoundError('Пользователь не найден.'));
+    }
+
+    return res.status(200).send(user);
+  }).catch(next);
 };
 
 module.exports.updateUser = (req, res) => {

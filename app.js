@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const { errors } = require('celebrate');
 const { NOT_FOUND } = require('./constats');
 const { createUser, login } = require('./controllers/users');
 const auth = require('./middlewares/auth');
@@ -20,6 +21,8 @@ app.use('/', require('./routes/cards'));
 app.use('/*', (req, res) => {
   res.status(NOT_FOUND).send({ message: 'Страница не найдена' });
 });
+
+app.use(errors());
 
 mongoose.connect('mongodb://localhost:27017/mestodb ');
 app.listen(PORT);

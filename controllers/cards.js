@@ -29,7 +29,7 @@ module.exports.likeCard = (req, res) => {
     { new: true },
   )
     .orFail(new Error('NotFound'))
-    .then((card) => res.send(card))
+    .then((card) => res.status(OK).send(card))
     .catch((err) => {
       if (err.message === 'NotFound') {
         return res.status(NOT_FOUND).send({ message: 'Карточка с таким id не найдена' });
@@ -48,7 +48,7 @@ module.exports.dislikeCard = (req, res) => {
     { new: true },
   )
     .orFail(new Error('NotFound'))
-    .then((card) => res.send(card))
+    .then((card) => res.status(OK).send(card))
     .catch((err) => {
       if (err.message === 'NotFound') {
         return res.status(NOT_FOUND).send({ message: 'Карточка с таким id не найдена' });

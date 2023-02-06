@@ -11,8 +11,8 @@ const app = express();
 
 app.use(express.json());
 
-app.post('/signin', login, signIn);
-app.post('/signup', createUser, signUp);
+app.post('/signin', signIn, login);
+app.post('/signup', signUp, createUser);
 app.use(auth);
 
 app.use('/', require('./routes/users'));

@@ -1,5 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
+const helmet = require('helmet');
 const { errors } = require('celebrate');
 const { NOT_FOUND } = require('./constats');
 const { createUser, login } = require('./controllers/users');
@@ -8,8 +9,11 @@ const { signUp, signIn } = require('./middlewares/validation');
 
 const { PORT = 3000 } = process.env;
 const app = express();
+mongoose.connect('mongodb://localhost:27017/mestodb ');
 
 app.use(express.json());
+
+app.use(helmet());
 
 app.post('/signin', signIn, login);
 app.post('/signup', signUp, createUser);
@@ -24,5 +28,4 @@ app.use('/*', (req, res) => {
 
 app.use(errors());
 
-mongoose.connect('mongodb://localhost:27017/mestodb ');
 app.listen(PORT);

@@ -2,7 +2,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const {
-  NOT_FOUND, BAD_REQUEST, SERVER_ERROR, CREATED,
+  NOT_FOUND, BAD_REQUEST, SERVER_ERROR, CREATED, DUPLICATE_ERROR_CODE,
 } = require('../constats');
 const ConflictError = require('../errors/ConflictError');
 const BadRequestError = require('../errors/BadRequestError');
@@ -31,27 +31,20 @@ module.exports.getUserById = (req, res) => {
 };
 
 module.exports.createUser = (req, res, next) => {
-  const { name, about, avatar, email, password,
-} = req.body;
+  const {
+    name, about, avatar, email, password,
+  } = req.body;
   if (!email || !password) {
     next(new BadRequestError('Неправильный логин или пароль.'));
   }
-
-  return User.findOne({ email }).then((user) => {
-    if (user) {
-      next(new ConflictError(`Пользователь с ${email} уже существует.`));
-    }
-
-    return bcrypt.hash(password, 10);
-  })
+  bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name,
       about,
       avatar,
       email,
       password: hash,
-    }),
-    )
+    }))
     .then((user) => res.status(CREATED).send({
       name: user.name,
       about: user.about,
@@ -59,13 +52,15 @@ module.exports.createUser = (req, res, next) => {
       _id: user._id,
       email: user.email,
     }))
-    .catch((err) => {
-      if (err.name === 'ValidationError') {
-        return res
-          .status(BAD_REQUEST)
-          .send({ message: 'Переданы некорректные данные' });
+    .catch((error) => {
+      if (error.name === 'ValidationError') {
+        next(new BadRequestError('Переданы некорректные данные'));
       }
-      return res.status(SERVER_ERROR).send({ message: 'Ошибка сервера' });
+      if (error.code === DUPLICATE_ERROR_CODE) {
+        next(new ConflictError('Пользователь с таким email уже существует'));
+      } else {
+        next(error);
+      }
     });
 };
 

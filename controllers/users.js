@@ -17,7 +17,7 @@ module.exports.getUsers = (req, res, next) => {
 module.exports.getUserById = (req, res, next) => {
   const { userId } = req.params;
   User.findById(userId)
-    .orFail(new Error('NotFound'))
+    .orFail(new NotFoundError('Пользователь не найден'))
     .then((user) => res.send(user))
     .catch((err) => {
       if (err.name === 'CastError') {
